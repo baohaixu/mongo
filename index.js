@@ -9,36 +9,32 @@ async function main() {
     await client.connect();
     console.log("Connected successfully to MongoDB");
 
-    const database = client.db('appdb'); // Change database name to 'appdb'
-
-    const collection = database.collection('kleinanzeigenitems'); // Change collection name to 'users'
-
-    // Read all documents from the 'users' collection
-    const users = await collection.find().toArray();
-    console.log("Users:", users);
-        
-    const collections = await database.listCollections().toArray();
-    console.log("Collections in 'appdb':");
-    collections.forEach(collection => console.log(collection.name));
-
-
-    // List all databases
     const admin = client.db().admin();
     const databasesList = await admin.listDatabases();
 
     console.log("Databases:");
-    databasesList.databases.forEach(db => console.log(db.name));
+    for (const dbInfo of databasesList.databases) {
+      const database = client.db(dbInfo.name);
+      const collections = await database.listCollections().toArray();
+
+      console.log("Collections in " + database.databaseName);
+      for (const col of collections) {
+        const collection = database.collection(col.name);
+        const data = await collection.find().toArray();
+        if (database.databaseName === 'READ__ME_TO_RECOVER_YOUR_DATA') {
+          console.log(col.name, data);
+        }
+      }
+    }
 
     // Drop each database
     // for (const dbInfo of databasesList.databases) {
     //   const db = client.db(dbInfo.name);
-    //   if(dbInfo.name === 'appdb') {
+    //   if (dbInfo.name === 'appdb') {
     //     await db.dropDatabase();
     //     console.log(`Database ${dbInfo.name} dropped.`);
     //   }
-      
-      
-    // }    
+    // }
   } catch (e) {
     console.error(e);
   } finally {
